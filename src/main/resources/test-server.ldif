@@ -1,13 +1,21 @@
+# === Base DN ===
 dn: dc=springframework,dc=org
 objectClass: top
 objectClass: domain
 dc: springframework
 
+# === Organizational Units ===
 dn: ou=people,dc=springframework,dc=org
 objectClass: top
 objectClass: organizationalUnit
 ou: people
 
+dn: ou=groups,dc=springframework,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+# === Admin User ===
 dn: cn=admin,dc=springframework,dc=org
 objectClass: person
 objectClass: inetOrgPerson
@@ -16,10 +24,40 @@ sn: admin
 uid: admin
 userPassword: adminpassword
 
+# === Regular Users ===
+dn: uid=user1,ou=people,dc=springframework,dc=org
+objectClass: person
+objectClass: inetOrgPerson
+cn: User One
+sn: One
+uid: user1
+userPassword: user1pass
+
+dn: uid=user2,ou=people,dc=springframework,dc=org
+objectClass: person
+objectClass: inetOrgPerson
+cn: User Two
+sn: Two
+uid: user2
+userPassword: user2pass
+
 dn: uid=user5,ou=people,dc=springframework,dc=org
 objectClass: person
 objectClass: inetOrgPerson
-cn: user5
-sn: user5
+cn: User Five
+sn: Five
 uid: user5
 userPassword: user5pass
+
+# === Groups / Roles ===
+dn: cn=ROLE_USER,ou=groups,dc=springframework,dc=org
+objectClass: groupOfUniqueNames
+cn: ROLE_USER
+uniqueMember: uid=user1,ou=people,dc=springframework,dc=org
+uniqueMember: uid=user2,ou=people,dc=springframework,dc=org
+uniqueMember: uid=user5,ou=people,dc=springframework,dc=org
+
+dn: cn=ROLE_ADMIN,ou=groups,dc=springframework,dc=org
+objectClass: groupOfUniqueNames
+cn: ROLE_ADMIN
+uniqueMember: cn=admin,dc=springframework,dc=org

@@ -9,23 +9,15 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.ldap.LdapBindAuthenticationManagerFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.ldap.authentication.BindAuthenticator;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.List;
 
-/**
- * Created on 2025 at 17:11
- * File: null.java
- * Project: Spring-security-using-ldap
- *
- * @author Frank GUEKENG
- * @date 21/09/2025
- * @time 17:11
- */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -43,14 +35,26 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(LdapContextSource contextSource) {
-        LdapBindAuthenticationManagerFactory factory = new LdapBindAuthenticationManagerFactory(contextSource);
-        factory.setUserDnPatterns("uid={0},ou=people"); // Recherche des users
-        return factory.createAuthenticationManager();
+        // Bind authenticator avec userDnPatterns
+        BindAuthenticator bindAuthenticator = new BindAuthenticator(contextSource);
+        bindAuthenticator.setUserDnPatterns(new String[]{"uid={0},ou=people,dc=springframework,dc=org"});
+
+        // Authorities populator : mappe les groupes LDAP aux rôles Spring
+        DefaultLdapAuthoritiesPopulator authoritiesPopulator =
+                new DefaultLdapAuthoritiesPopulator(contextSource, "ou=groups");
+        authoritiesPopulator.setGroupSearchFilter("(uniqueMember={0})");
+
+        // Création du provider LDAP
+        LdapAuthenticationProvider ldapProvider =
+                new LdapAuthenticationProvider(bindAuthenticator, authoritiesPopulator);
+
+        return new ProviderManager(List.of(ldapProvider));
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance(); // adapté si {noop}userPassword dans LDIF
+        // Correspond au {noop} dans le LDIF
+        return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
@@ -61,6 +65,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
+
         return http.build();
     }
 }

@@ -1,0 +1,7 @@
+dn: uid=user5,ou=people,dc=springframework,dc=org
+objectClass: person
+objectClass: inetOrgPerson
+cn: user5
+sn: user5
+uid: user5
+userPassword: {noop}user5pass
